@@ -5,8 +5,8 @@ import { ApiService } from "./api.service";
 
 @Global()
 @Module({
-	imports: [TypeOrmModule.forFeature([ApiKey])],
-	providers: [ApiService],
-	exports: [ApiService],
+  imports: [TypeOrmModule.forFeature([ApiKey])],
+  providers: [ApiService],
+  exports: [ApiService],
 })
 export class AuthModule {}

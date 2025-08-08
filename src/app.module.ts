@@ -14,32 +14,32 @@ import { CommonModule } from "./common/common.module";
 import { config } from "./config/data-source.config";
 
 @Module({
-    imports: [
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: [`.env.${process.env.NODE_ENV}`],
-        }),
-        TypeOrmModule.forRoot(config),
-        UsersModule,
-        ProjectsModule,
-        TasksModule,
-        CommonModule,
-        AuthModule,
-    ],
-    controllers: [AppController],
-    providers: [
-        AppService,
-        ConfigService,
-        {
-            provide: APP_PIPE,
-            useValue: new ValidationPipe({
-                whitelist: true,
-            }),
-        },
-        {
-            provide: APP_GUARD,
-            useClass: AuthGuard,
-        },
-    ],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [`.env.${process.env.NODE_ENV}`],
+    }),
+    TypeOrmModule.forRoot(config),
+    UsersModule,
+    ProjectsModule,
+    TasksModule,
+    CommonModule,
+    AuthModule,
+  ],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    ConfigService,
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+      }),
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}

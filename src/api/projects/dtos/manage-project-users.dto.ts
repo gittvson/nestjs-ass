@@ -1,9 +1,9 @@
 import { IsUUID } from "class-validator";
 
 export class ManageProjectUsersDto {
-	@IsUUID()
-	userId: string;
+  @IsUUID()
+  userId: string;
 
-	@IsUUID()
-	projectId: string;
+  @IsUUID()
+  projectId: string;
 }
