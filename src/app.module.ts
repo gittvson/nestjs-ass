@@ -19,7 +19,7 @@ import { config } from "./config/data-source.config";
             isGlobal: true,
             envFilePath: [`.env.${process.env.NODE_ENV}`],
         }),
-        TypeOrmModule.forRoot(config as DataSourceOptions),
+        TypeOrmModule.forRoot(config),
         UsersModule,
         ProjectsModule,
         TasksModule,
