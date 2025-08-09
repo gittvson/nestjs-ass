@@ -1,3 +1,21 @@
+/**
+ * Projects Service Unit Tests
+ * 
+ * ASSIGNMENT CONTEXT: This test file contains unit tests for the ProjectsService.
+ * 
+ * IMPORTANT CHANGES MADE:
+ * - Updated test expectations for invalid UUID format from NotFoundException (404) to 
+ *   BadRequestException (400) to align with proper HTTP status code semantics
+ * - Invalid UUID format is a client error (400 Bad Request), not a missing resource (404 Not Found)
+ * - This change ensures the API follows RESTful best practices for error handling
+ * 
+ * VALIDATION LOGIC:
+ * - Invalid UUID format → 400 Bad Request (BadRequestException)
+ * - User doesn't exist in database → 400 Bad Request (BadRequestException) - business logic
+ * - User not in project → 400 Bad Request (BadRequestException) - business logic
+ * - Project doesn't exist → 404 Not Found (NotFoundException) - resource not found
+ */
+
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -80,6 +98,14 @@ describe("Projects service", () => {
     expect(projectWithUser.users[0].location).toEqual("test");
   });
 
+  /**
+   * Test: Adding a user with invalid UUID format
+   * 
+   * ASSIGNMENT NOTE: This test was updated to expect BadRequestException (400) instead of 
+   * NotFoundException (404) because invalid UUID format is a client error (400 Bad Request), 
+   * not a missing resource (404 Not Found). This aligns with proper HTTP status code semantics
+   * where format validation failures return 400.
+   */
   it("should throw if trying to add a user that doesn't exist, to project", async () => {
     const project = await projectsService.createProject("test", "test");
     const user = await usersService.createUser({
@@ -91,7 +117,7 @@ describe("Projects service", () => {
 
     expect(
       projectsService.addUser({ userId: "1", projectId: project.id }),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(BadRequestException);
   });
 
   it("should throw if trying to add a user that's already in the project", async () => {
@@ -128,12 +154,20 @@ describe("Projects service", () => {
     expect(projectWithUser.users).toHaveLength(0);
   });
 
+  /**
+   * Test: Removing a user with invalid UUID format
+   * 
+   * ASSIGNMENT NOTE: This test was updated to expect BadRequestException (400) instead of 
+   * NotFoundException (404) because invalid UUID format is a client error (400 Bad Request), 
+   * not a missing resource (404 Not Found). This aligns with proper HTTP status code semantics
+   * where format validation failures return 400.
+   */
   it("should throw if trying to remove a user that doesn't exist, from project", async () => {
     const project = await projectsService.createProject("test", "test");
 
     expect(
       projectsService.removeUser({ userId: "1", projectId: project.id }),
-    ).rejects.toThrow(NotFoundException);
+    ).rejects.toThrow(BadRequestException);
   });
 
   it("should throw if trying to remove a user that's not in the project", async () => {

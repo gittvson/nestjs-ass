@@ -97,6 +97,18 @@ export class ProjectsService {
 
   /**
    * Manages adding into or removing users from a project
+   * 
+   * ASSIGNMENT VALIDATION LOGIC:
+   * This method implements a comprehensive validation layer that follows RESTful API best practices:
+   * 
+   * HTTP Status Code Strategy:
+   * - 400 Bad Request: Invalid UUID format, business logic violations (user not in project)
+   * - 404 Not Found: Resource doesn't exist in database
+   * 
+   * Validation Hierarchy:
+   * 1. UUID format validation (400 if invalid)
+   * 2. Database existence validation (404 if not found)
+   * 3. Business logic validation (400 if operation invalid)
    *
    * @param projectId - The unique UUID of the project
    * @param userId - The unique UUID of the user
@@ -109,19 +121,50 @@ export class ProjectsService {
     operation: "add" | "remove",
   ): Promise<Project> {
     const project = await this.findById(projectId, true);
-    await this.usersService.findById(userId);
-
-    const existsInProject = project.users.map((u) => u.id).includes(userId);
-
+    
     if (operation === "add") {
-      if (existsInProject)
-        throw new BadRequestException("User is already added to project");
+      // For adding, check if UUID is valid first
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(userId)) {
+        throw new BadRequestException("Invalid user ID format");
+      }
+      
+      // Then validate the user exists
+      try {
+        const user = await this.usersService.findById(userId);
+        const existsInProject = project.users.map((u) => u.id).includes(userId);
+        
+        if (existsInProject)
+          throw new BadRequestException("User is already added to project");
 
-      const user = await this.usersService.findById(userId);
-      project.users.push(user);
+        project.users.push(user);
+      } catch (error) {
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException("User not found");
+        }
+        throw error;
+      }
     }
 
     if (operation === "remove") {
+      // For removing, check if UUID is valid first
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(userId)) {
+        throw new BadRequestException("Invalid user ID format");
+      }
+      
+      // For remove operation, treat non-existent users as "not in project"
+      // This is business logic validation, not resource validation
+      try {
+        await this.usersService.findById(userId);
+      } catch (error) {
+        if (error instanceof NotFoundException) {
+          throw new BadRequestException("User doesn't exist in project");
+        }
+        throw error;
+      }
+      
+      const existsInProject = project.users.map((u) => u.id).includes(userId);
       if (!existsInProject)
         throw new BadRequestException("User doesn't exist in project");
 

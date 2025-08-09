@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DbUtilsService } from "src/common/services/db-utils.service";
 import { DeleteStatus } from "src/common/types";
@@ -22,7 +22,11 @@ export class UsersService {
    * @throws {NotFoundException} - If no user is found with the given UUID
    */
   async findById(id: string): Promise<User> {
-    return null;
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+    return user;
   }
 
   /**
@@ -34,7 +38,11 @@ export class UsersService {
    * @throws {NotFoundException} - If a user with the given email doesn't exist (optional)
    */
   async findByEmail(email: string, throwsError = false): Promise<User | null> {
-    return null;
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user && throwsError) {
+      throw new NotFoundException("User not found");
+    }
+    return user;
   }
 
   /**
@@ -44,7 +52,13 @@ export class UsersService {
    * @returns Promise that resolves to the created User entity
    */
   async createUser(payload: CreateUserDto): Promise<User> {
-    return null;
+    const existingUser = await this.findByEmail(payload.email);
+    if (existingUser) {
+      throw new BadRequestException("Email already in use");
+    }
+
+    const user = this.userRepository.create(payload);
+    return this.userRepository.save(user);
   }
 
   /**
@@ -55,7 +69,18 @@ export class UsersService {
    * @returns Promise that resolves to the updated User entity
    */
   async updateUser(id: string, attrs: UpdateUserDto): Promise<User> {
-    return null;
+    const user = await this.findById(id);
+    
+    // Check if email is being updated and if it already exists
+    if (attrs.email && attrs.email !== user.email) {
+      const existingUser = await this.findByEmail(attrs.email);
+      if (existingUser) {
+        throw new BadRequestException("Email already in use");
+      }
+    }
+    
+    Object.assign(user, attrs);
+    return this.userRepository.save(user);
   }
 
   /**
@@ -65,6 +90,8 @@ export class UsersService {
    * @returns Promise that resolves to the DeleteStatus type
    */
   async deleteUser(id: string): Promise<DeleteStatus> {
-    return null;
+    const user = await this.findById(id);
+    await this.userRepository.remove(user);
+    return { deleted: true, message: `User with ID ${id} has been deleted` };
   }
 }
