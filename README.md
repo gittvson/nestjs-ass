@@ -129,5 +129,5 @@ $ npm run migration:revert
 ```
 
 # Assignment applicantor
-- Full name : 
-- Email :
+- Full name : Tran Van Son
+- Email : son.tv1509@gmail.com
