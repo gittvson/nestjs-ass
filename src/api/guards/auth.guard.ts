@@ -11,9 +11,12 @@ export class AuthGuard implements CanActivate {
 
     if (!providedKey) return false;
 
-    const key = await this.apiService.findKey(providedKey);
-
-    if (!key) return false;
-    return true;
+    try {
+      const key = await this.apiService.findKey(providedKey);
+      if (!key) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

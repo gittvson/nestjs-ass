@@ -19,10 +19,14 @@ export class ApiService {
   async findKey(key: string): Promise<ApiKey | null> {
     const apiKey = await this.apiRepository.findOne({ where: { id: key } });
 
-    if (apiKey && !apiKey.isActive) {
-      throw new UnauthorizedException(
-        "Please provide a valid and active API Key",
-      );
+    if (!apiKey || !apiKey.isActive) {
+      throw new UnauthorizedException("Please provide a valid and active API Key");
+    }
+
+    // Check expiration
+    const now = new Date();
+    if (apiKey.expiresAt && now > apiKey.expiresAt) {
+      throw new UnauthorizedException("API Key has expired");
     }
 
     return apiKey;
@@ -34,8 +38,13 @@ export class ApiService {
    * @returns Promise that resolves to the new generated API Key
    */
   async generateKey(): Promise<ApiKey> {
-    const key = this.apiRepository.create();
-
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes from now
+    const key = this.apiRepository.create({
+      isActive: true,
+      createdAt: now,
+      expiresAt,
+    });
     return this.apiRepository.save(key);
   }
 }
